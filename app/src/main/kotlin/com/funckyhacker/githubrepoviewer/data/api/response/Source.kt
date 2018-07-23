@@ -2,7 +2,8 @@ package com.funckyhacker.githubrepoviewer.data.api.response
 
 import com.google.gson.annotations.SerializedName
 
-data class Repository(
+data class Source(
+
         @SerializedName("id") val id: Int,
         @SerializedName("node_id") val node_id: String,
         @SerializedName("name") val name: String,
@@ -77,9 +78,5 @@ data class Repository(
         @SerializedName("allow_squash_merge") val allow_squash_merge: Boolean,
         @SerializedName("allow_merge_commit") val allow_merge_commit: Boolean,
         @SerializedName("subscribers_count") val subscribers_count: Int,
-        @SerializedName("network_count") val network_count: Int,
-        @SerializedName("license") val license: License,
-        @SerializedName("organization") val organization: Organization,
-        @SerializedName("parent") val parent: Parent,
-        @SerializedName("source") val source: Source
+        @SerializedName("network_count") val network_count: Int
 )

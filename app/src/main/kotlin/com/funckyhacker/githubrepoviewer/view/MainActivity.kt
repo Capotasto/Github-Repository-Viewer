@@ -1,7 +1,8 @@
-package com.funckyhacker.githubrepoviewer
+package com.funckyhacker.githubrepoviewer.view
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
+import com.funckyhacker.githubrepoviewer.R
 
 class MainActivity : AppCompatActivity() {
 

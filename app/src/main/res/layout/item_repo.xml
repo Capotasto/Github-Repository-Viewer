@@ -19,15 +19,21 @@
         >
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@{repo.name}"
             android:layout_marginTop="@dimen/element_spacing_large"
             android:layout_marginBottom="@dimen/element_spacing_large"
+            android:layout_marginStart="@dimen/element_spacing_large"
+            android:layout_marginEnd="@dimen/element_spacing_large"
+            android:textSize="@dimen/text_size_medium"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintVertical_bias="0.0"
+            tools:text="Test Repo"
             />
 
     </android.support.constraint.ConstraintLayout>

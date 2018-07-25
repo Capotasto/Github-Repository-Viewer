@@ -6,6 +6,7 @@ import android.arch.lifecycle.ViewModelProviders
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import com.funckyhacker.githubrepoviewer.R
 import com.funckyhacker.githubrepoviewer.databinding.ActivityMainBinding
@@ -29,6 +30,15 @@ class MainActivity : AppCompatActivity() {
         RepoListAdapter()
     }
 
+    private val layoutManager: LinearLayoutManager by lazy {
+        LinearLayoutManager(this)
+    }
+
+    private val decoration: DividerItemDecoration by lazy {
+        DividerItemDecoration(this, layoutManager.orientation)
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AndroidInjection.inject(this)
@@ -50,8 +60,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun initRecycler() {
         binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
+            layoutManager = this@MainActivity.layoutManager
             adapter = this@MainActivity.adapter
+            addItemDecoration(decoration)
         }
     }
 }

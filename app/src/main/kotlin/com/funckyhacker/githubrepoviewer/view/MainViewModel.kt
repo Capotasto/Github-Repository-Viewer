@@ -23,23 +23,48 @@ class MainViewModel @Inject constructor(
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     val repos = MutableLiveData<List<Repository>>()
     val isLoading = ObservableField<Boolean>(false)
+    private var page = 1
+    private var isLastPage = false
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun init() {
-        repository.getRepos(ORG_NAME)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe{ isLoading.set(true) }
-                .doFinally { isLoading.set(false) }
-                .subscribeBy(
-                        onSuccess = {repos.postValue(it)},
-                        onError =  {Timber.w(it)}
-                ).addTo(compositeDisposable)
+        isLastPage = false
+        page = 1
+        getRepos()
     }
 
     override fun onCleared() {
         super.onCleared()
         Timber.i("onCleared")
+    }
+
+    fun getRepos() {
+        if (isLastPage || isLoading.get()!!) {
+            return
+        }
+        repository.getRepos(ORG_NAME, page)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe{ isLoading.set(true) }
+                .doFinally { isLoading.set(false) }
+                .subscribeBy(
+                        onSuccess = {
+                            if (it.isEmpty()) {
+                                isLastPage = true
+                                return@subscribeBy
+                            }
+                            if (repos.value == null) {
+                                repos.postValue(it)
+                                page++
+                                return@subscribeBy
+                            }
+                            val list = ArrayList(repos.value)
+                            list.addAll(it)
+                            repos.postValue(list)
+                            page++
+                        },
+                        onError =  {Timber.w(it)}
+                ).addTo(compositeDisposable)
     }
 
 }

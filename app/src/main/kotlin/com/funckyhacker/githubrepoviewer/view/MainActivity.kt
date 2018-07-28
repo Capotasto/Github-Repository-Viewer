@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.repos.observe(this, Observer {
             it?.let {
-                adapter.repos = it
+                adapter.submitList(it)
             }
         })
     }

@@ -8,9 +8,11 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import com.funckyhacker.githubrepoviewer.R
 import com.funckyhacker.githubrepoviewer.databinding.ActivityMainBinding
 import dagger.android.AndroidInjection
+import timber.log.Timber
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
@@ -63,6 +65,18 @@ class MainActivity : AppCompatActivity() {
             layoutManager = this@MainActivity.layoutManager
             adapter = this@MainActivity.adapter
             addItemDecoration(decoration)
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    val totalCount = recyclerView.adapter.itemCount//The number of item in adapter
+                    val childCount = recyclerView.childCount //The number of item which is shown on RecyclerView
+                    val firstPosition = this@MainActivity.layoutManager.findFirstVisibleItemPosition() // The fist position of RecyclerView
+                    if (totalCount == childCount + firstPosition) {
+                        // Paging
+                        Timber.i("Get Next Page")
+                        viewModel.getRepos()
+                    }
+                }
+            })
         }
     }
 }

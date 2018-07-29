@@ -25,6 +25,7 @@ class MainViewModel @Inject constructor(
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     val repos = MutableLiveData<List<Repository>>()
     val isLoading = ObservableField<Boolean>(false)
+    val showToast = MutableLiveData<Boolean>()
     private var page = 1
     private var isLastPage = false
 
@@ -50,7 +51,7 @@ class MainViewModel @Inject constructor(
     /**
      * 現在のページ数でデータベースを検索する
      */
-    private fun callDb() {
+    fun callDb() {
         Timber.i("callDb: page: %d", page)
         db.getAll(page)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -58,7 +59,6 @@ class MainViewModel @Inject constructor(
                 .doFinally{ isLoading.set(false) }
                 .subscribeBy(
                         onSuccess = {
-                            isLoading.set(false)
                             Timber.d("size: %s", it.size)
                             if (it.isEmpty()) {
                                 callRepoApi()
@@ -77,7 +77,9 @@ class MainViewModel @Inject constructor(
                             page++
 
                         },
-                        onError = {Timber.w(it)}
+                        onError = {
+                            Timber.w(it)
+                        }
                 )
                 .addTo(compositeDisposable)
     }
@@ -85,7 +87,7 @@ class MainViewModel @Inject constructor(
     /**
      * Github Repository API 呼び出し
      */
-    private fun callRepoApi() {
+    fun callRepoApi() {
         Timber.i("callRepoApi: page: %d", page)
         repository.getRepos(ORG_NAME, page)
                 .subscribeOn(Schedulers.io())
@@ -113,7 +115,10 @@ class MainViewModel @Inject constructor(
                             saveToDb(it, page)
                             page++
                         },
-                        onError =  {Timber.w(it)}
+                        onError =  {
+                            Timber.w(it)
+                            showToast.postValue(true)
+                        }
                 ).addTo(compositeDisposable)
     }
 

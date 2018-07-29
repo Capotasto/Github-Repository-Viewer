@@ -3,6 +3,7 @@ package com.funckyhacker.githubrepoviewer.view
 import android.arch.lifecycle.*
 import android.databinding.ObservableField
 import com.funckyhacker.githubrepoviewer.data.api.response.Repository
+import com.funckyhacker.githubrepoviewer.data.db.RepositoryDb
 import com.funckyhacker.githubrepoviewer.data.repository.GithubRepository
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -13,7 +14,8 @@ import timber.log.Timber
 import javax.inject.Inject
 
 class MainViewModel @Inject constructor(
-        private val repository: GithubRepository
+        private val repository: GithubRepository,
+        private val db: RepositoryDb
 ) : ViewModel(), LifecycleObserver {
 
     companion object {
@@ -42,6 +44,49 @@ class MainViewModel @Inject constructor(
         if (isLastPage || isLoading.get()!!) {
             return
         }
+        callDb()
+    }
+
+    /**
+     * 現在のページ数でデータベースを検索する
+     */
+    private fun callDb() {
+        Timber.i("callDb: page: %d", page)
+        db.getAll(page)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe{ isLoading.set(true) }
+                .doFinally{ isLoading.set(false) }
+                .subscribeBy(
+                        onSuccess = {
+                            isLoading.set(false)
+                            Timber.d("size: %s", it.size)
+                            if (it.isEmpty()) {
+                                callRepoApi()
+                                return@subscribeBy
+                            }
+                            // 初回の取得のケース
+                            if (repos.value == null) {
+                                repos.postValue(it)
+                                page++
+                                return@subscribeBy
+                            }
+                            // 上記以外のケース
+                            val list = ArrayList(repos.value)
+                            list.addAll(it)
+                            repos.postValue(list)
+                            page++
+
+                        },
+                        onError = {Timber.w(it)}
+                )
+                .addTo(compositeDisposable)
+    }
+
+    /**
+     * Github Repository API 呼び出し
+     */
+    private fun callRepoApi() {
+        Timber.i("callRepoApi: page: %d", page)
         repository.getRepos(ORG_NAME, page)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -49,22 +94,42 @@ class MainViewModel @Inject constructor(
                 .doFinally { isLoading.set(false) }
                 .subscribeBy(
                         onSuccess = {
+                            // 最終ページのケース
                             if (it.isEmpty()) {
                                 isLastPage = true
                                 return@subscribeBy
                             }
+                            // 初回の取得のケース
                             if (repos.value == null) {
                                 repos.postValue(it)
+                                saveToDb(it, page)
                                 page++
                                 return@subscribeBy
                             }
+                            // 上記以外のケース
                             val list = ArrayList(repos.value)
                             list.addAll(it)
                             repos.postValue(list)
+                            saveToDb(it, page)
                             page++
                         },
                         onError =  {Timber.w(it)}
                 ).addTo(compositeDisposable)
     }
 
+    /**
+     * DBへの保存処理
+     */
+    private fun saveToDb(list: List<Repository>, page: Int) {
+        db.save(list, page)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeBy(
+                        onComplete = {
+                            Timber.i("Saved %d record(s) as page %d", list.size, page)
+                        },
+                        onError = { Timber.w(it) }
+                ).addTo(compositeDisposable)
+
+    }
 }

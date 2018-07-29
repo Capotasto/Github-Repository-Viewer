@@ -80,6 +80,9 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:4.6.0'
     // Gson
     implementation 'com.google.code.gson:gson:2.8.4'
+    // stetho
+    implementation 'com.facebook.stetho:stetho:1.5.0'
+    implementation 'com.uphyca:stetho_realm:2.3.0'
 
     //Unit Test
     testImplementation 'junit:junit:4.12'

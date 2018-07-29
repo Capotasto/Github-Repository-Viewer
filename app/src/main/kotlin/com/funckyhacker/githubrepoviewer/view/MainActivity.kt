@@ -13,6 +13,7 @@ import com.funckyhacker.githubrepoviewer.R
 import com.funckyhacker.githubrepoviewer.databinding.ActivityMainBinding
 import dagger.android.AndroidInjection
 import timber.log.Timber
+import java.util.*
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
@@ -61,16 +62,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initRecycler() {
+        var currentTime = Date().time
         binding.recyclerView.apply {
             layoutManager = this@MainActivity.layoutManager
             adapter = this@MainActivity.adapter
             addItemDecoration(decoration)
+            // Tricky: 通常のScrollListenerでは反応しすぎて重複して呼び出しが発生してしまう
+            // そのため、前回イベント時刻と比較して 500[ms] 以上経ったもののみをトリガーする。
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     val totalCount = recyclerView.adapter.itemCount//The number of item in adapter
                     val childCount = recyclerView.childCount //The number of item which is shown on RecyclerView
                     val firstPosition = this@MainActivity.layoutManager.findFirstVisibleItemPosition() // The fist position of RecyclerView
-                    if (totalCount == childCount + firstPosition) {
+                    if (totalCount == childCount + firstPosition && isTriggeredEvent(currentTime, Date().time)) {
+                        currentTime = Date().time
                         // Paging
                         Timber.i("Get Next Page")
                         viewModel.getRepos()
@@ -78,5 +83,9 @@ class MainActivity : AppCompatActivity() {
                 }
             })
         }
+    }
+
+    private fun isTriggeredEvent(old: Long, new: Long): Boolean {
+        return new - old >= 500 //
     }
 }

@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.widget.Toast
 import com.funckyhacker.githubrepoviewer.R
 import com.funckyhacker.githubrepoviewer.databinding.ActivityMainBinding
 import dagger.android.AndroidInjection
@@ -59,6 +60,14 @@ class MainActivity : AppCompatActivity() {
                 adapter.submitList(it)
             }
         })
+
+        viewModel.showToast.observe(this, Observer<Boolean> {
+            // TODO: 一応これで動くがviewModelからViewへのイベント送信方法は見直す必要あり
+            // TODO: 参考: https://medium.com/google-developers/livedata-with-snackbar-navigation-and-other-events-the-singleliveevent-case-ac2622673150
+            it?.let {
+                if (it) showToast()
+            }
+        })
     }
 
     private fun initRecycler() {
@@ -87,5 +96,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun isTriggeredEvent(old: Long, new: Long): Boolean {
         return new - old >= 500 //
+    }
+
+    private fun showToast() {
+        Toast.makeText(this, R.string.error_msg, Toast.LENGTH_SHORT).show()
+        viewModel.showToast.value = false
     }
 }
